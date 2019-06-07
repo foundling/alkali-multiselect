@@ -1,0 +1,201 @@
+doc-multiselect * {
+  background: transparent;
+}
+doc-multiselect {
+  border: 1px solid black !important;
+  background: whitesmoke;
+  box-sizing: border-box;
+  position: absolute;
+  width: 400px;
+  padding: 1px;
+
+  * { 
+    box-sizing: border-box; 
+  }
+
+  .doc-multiselect-list-item {
+    width: 100%;
+    &:focus {
+      outline: 0;
+    }
+  }
+
+  .doc-multiselect-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    button { 
+      border: none; 
+    }
+
+    .doc-multiselect-close {
+      color: gray;
+      background: whitesmoke;
+      text-align: right;
+      width: 100%;
+      padding: 2px 5px;
+
+      &:hover {
+        color: #afafaf;
+      }
+    }
+
+    //
+    // SEARCH
+    //
+    .doc-multiselect-search-container {
+      border-bottom: 1px solid #eaeaea;
+      padding: 2px 5px 8px 5px;
+
+      .doc-multiselect-search-input {
+        background: white;
+        border: 1px solid red;
+        border-radius: 20px;
+        padding: 1px 5px;
+        margin: 2px 0px;
+        width: 100%;
+        display: inline-flex;
+        flex-direction: row-reverse;
+        align-items: center;
+
+        .doc-multiselect-search-input-el {
+          font-size: 1em;
+          display: inline-flex;
+          width: 100%;
+          border: 0px solid transparent;
+          height: 20px;
+          margin: 2px 2px 2px 5px;
+          padding: 0;
+
+          &:focus {
+            outline: 0;
+          }
+
+        }
+
+        .doc-multiselect-search-input-icon {
+          display: inline-flex;
+          color: lightgray;
+          padding: 2px;
+        }
+      }
+    }
+
+    //
+    // SELECTED LIST
+    //
+    .doc-multiselect-selected-container {
+      box-sizing: border-box;
+      width: 100%;
+      max-height: 200px;
+      min-height: 0px;
+      height: auto;
+      background: whitesmoke;
+      overflow-y: scroll;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0px 4px;
+
+      .doc-multiselect-list-item {
+        display: none;
+        background: transparent;
+        padding: 0px 0px;
+
+        &.selected {
+          margin: 5px 0px;
+          border-radius: 2px;
+          display: inline-flex;
+          background: #4484c7;
+          font-size: 11px;
+          color: white;
+          justify-content: space-between;
+          align-items: center;
+
+          &:focus {
+            background: rgba(68, 132, 199, 0.9);
+          }
+
+          .list-item-text {
+            border-top-right-radius: 2px;
+            border-bottom-right-radius: 2px;
+            padding: 5px;
+          }
+
+          .remove-item {
+            border: 1px solid transparent; 
+            background: rgba(255,255,255,0.2);
+            padding: 5px;
+            height: 100%;
+            color: white;
+            font-size: 1.1em;
+
+            &:hover {
+              background: rgba(255,255,255,0.4);
+            }
+
+          }
+
+        }
+      }
+    }
+
+    //
+    // UNSELECTED LIST
+    //
+    .doc-multiselect-unselected-container {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: auto;
+      max-height: 450px;
+      min-height: 0;
+      overflow-y: auto;
+
+      .doc-multiselect-list-item {
+        margin: 0;
+        padding: 5px;
+        border: none;
+        display: inline-flex;
+        font-size: 12px;
+        text-align: left;
+        box-sizing: border-box;
+        list-style-type: none;
+        min-width: 130px;
+        background: white;
+        border-bottom: 1px solid #EFEFEF;
+
+        &:focus {
+          background: lightgray;
+          outline: 0;
+        }
+
+        &:hover {
+          background: whitesmoke;
+          color: #329fff;
+        }
+
+        &.filtered {
+          display: none;
+        }
+
+        &.selected {
+          background: #eff7ff;
+        }
+        &.no-matches-found {
+          font-size: 12px;
+
+          &.hidden {
+            display: none;
+          }
+        }
+
+      }
+
+    }
+
+  }
+}
