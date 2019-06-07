@@ -4,6 +4,12 @@
 // - express structure in idiomatic alkali declarative form, makes much clearer
 // - positioning
 // - make 'arbitrarily' nestable and selectable
+// - when are event bindings supposed to be done?
+// - emit events
+//
+//
+// bugs:
+// - clicking on selected list element (light blue) in list of possible selections removes it but shouldnt'
 
 
 
@@ -40,7 +46,13 @@ class MultiSelect extends Element {
       selections = null, 
       parentNode = null, 
       open = true, 
-      corner = 'topright', 
+      mountPoint = null, 
+      /* 
+         { 
+           corner: 'topleft' | bottomleft' | 'topright' | 'bottomright', 
+           parentNode: HTMLElement 
+         }
+       */
       closeOnSelect = false,
       placeholder = '',
       maxSelections = null,
@@ -58,7 +70,6 @@ class MultiSelect extends Element {
     props.maxSelections = maxSelections || props.items.get('length') // todo: set a min of 1
     props.placeholder = reactive(placeholder)
     props.parentNode = parentNode
-    props.corner = corner // 'topleft' | 'topright' | 'bottom left' | 'bottom right'
     props.classList = this.classList
 
     // selection data
@@ -106,11 +117,15 @@ class MultiSelect extends Element {
     this.closeButton = this.querySelector('.doc-multiselect-close')
     this.selectionsContainer = this.querySelector('.doc-multiselect-selected-container')
 
+    document.body.addEventListener('click', this.handleOutsideClicks.bind(this))
+    this.closeButton.addEventListener('click', this.toggle.bind(this))
+
   }
 
   // {} -> HTMLElement
   build(props) {
 
+    // express the component in idiomatic Alkali style, as a tree
     return new Div('.doc-multiselect-container', [
         Div('.doc-multiselect-close.fa.fa-remove'),
         Div('.doc-multiselect-search-container', [
@@ -140,7 +155,7 @@ class MultiSelect extends Element {
         )]),
         Div('.doc-multiselect-unselected-container', { 
           onclick: this.selectItem.bind(this)
-        },  [...props.items.to(items => items.map((itemText, index) => 
+        },  props.items.map((itemText, index) => 
           props.Item({
             id: `doc-multiselect-unselected-list-item-${index}`,
             title: 'select a list item',
@@ -155,12 +170,11 @@ class MultiSelect extends Element {
           }, [ 
             Span('.list-item-text', 
             itemText) 
-          ])).concat(
-              Div('.doc-multiselect-list-item.no-matches-found', {
-                classes: { hidden: this.props.hasMatches }
-              }, [ Span('No Results Found!') ])
-            )
-          )]
+          ])).to(items => items.concat(
+            Div('.doc-multiselect-list-item.no-matches-found', {
+              classes: { hidden: this.props.hasMatches }
+            }, [ Span('No Results Found!') ])
+          ))
         )
       ]
     )
@@ -168,12 +182,27 @@ class MultiSelect extends Element {
   }
  
   attached() {
-    this.bindEvents()
-    this.position(this.props.parentNode || this.parentNode)
+
+    const { mountPoint: {parentNode, corner} = {} } = this.props
+
+    if (parentNode) {
+      this.position(parentNode, corner)
+    }
   }
 
   detached() {
     document.body.removeEventListener('click', this.handleOutsideClicks)
+  }
+
+  emit(name, data) {
+
+    // i.e. 11 compatible
+    if (['doc-multiselect-closed', 'doc-multiselect-selected', 'doc-multiselect-removed'].includes(name)) {
+      let e = document.createEvent('CustomEvent')
+      e.initCustomEvent(name, true, true, data)
+      document.dispatchEvent(e)
+    }
+
   }
 
   selectItem(e) {
@@ -184,37 +213,37 @@ class MultiSelect extends Element {
     const parentIndex = listItems.indexOf(e.target.parentNode)
     const index = [targetIndex, parentIndex].filter(i => i >= 0)[0]
 
-    if (index == null)
+    if (index == null || props.indexedSelections.get(index) != null)
       return
 
-    const currentValue = props.indexedSelections.get(index)
+    const selectedItem = props.items.get(index)
+    const indexedValue = props.indexedSelections.get(index)
     const valCount = props.selections.valueOf().length
  
+    // max selections reached, move last-cached selection to currently selected value 
     if (valCount >= props.maxSelections) {
 
-      // at max selections, so we revert prior cached choice 
-      // and add this value
- 
       if (props.lastSelectionIndex != null) // null when empty values array
         props.indexedSelections.undefine(props.lastSelectionIndex)
 
-      props.indexedSelections.set(index, props.items.get(index))
+      props.indexedSelections.set(index, selectedItem)
 
     } else {
 
-      // we toggle selection
-      if (currentValue == null)
-        props.indexedSelections.set(index, props.items.get(index))
+      // toggle selection
+      if (indexedValue == null)
+        props.indexedSelections.set(index, selectedItem)
       else
         props.indexedSelections.undefine(index, undefined)
     }
 
+    // good case for reverse transform?
     const mappedBack = Object.keys(props.indexedSelections.valueOf()).reduce((a,k) => {
         const v = props.indexedSelections.valueOf()[k]  
         return v ? a.concat(v) : a 
     },[])
-
     props.selections.put(mappedBack)
+    this.emit('doc-multiselect-selected', { item: selectedItem })
 
     if (this.props.closeOnSelect)
       this.props.classList.toggle('hidden')
@@ -225,6 +254,7 @@ class MultiSelect extends Element {
   }
 
   removeItem(e) {
+
     const props = this.props
     const listItems = [...this.selectionsContainer.children]
 
@@ -232,22 +262,20 @@ class MultiSelect extends Element {
       return
 
     const index = listItems.indexOf(e.target.parentNode)
-    props.indexedSelections.undefine(index)
+    const removedItem = props.indexedSelections.get(index)
+
     const mappedBack = Object.keys(props.indexedSelections.valueOf()).reduce((a,k) => {
         const v = props.indexedSelections.valueOf()[k]  
         return v ? a.concat(v) : a 
     },[])
     props.selections.put(mappedBack)
 
+    props.indexedSelections.undefine(index)
+    this.emit('doc-multiselect-removed', { item: removedItem })
+
     if (props.closeOnSelect)
       props.classList.toggle('hidden')
-  }
 
-  bindEvents() {
-    //this.listContainer.addEventListener('click', this.selectItem.bind(this))
-    //this.selectionsContainer.addEventListener('click', this.removeItem.bind(this))
-    document.body.addEventListener('click', this.handleOutsideClicks.bind(this))
-    //this.closeButton.addEventListener('click', _ => this.props.classList.toggle('hidden'))
   }
 
   handleOutsideClicks(e) {
@@ -259,19 +287,21 @@ class MultiSelect extends Element {
     const dropdown = this
 
     // inside click
-    if (dropdown.contains(target))
+    if (dropdown.contains(target)) {
       return
-
-    else if (target === dropdown.parentNode && !this.props.classList.contains('hidden'))
+    } else if (target === dropdown.parentNode && !this.props.classList.contains('hidden')) {
       this.toggleVisibility(e)
-
-    else
+    } else {
       this.props.classList.add('hidden')
+    }
 
   }
 
+  toggle(e) {
+    this.props.classList.toggle('hidden')
+    this.emit('doc-multiselect-closed')
+  }
   toggleVisibility(e) {
-    // fixme: toggling visibility shouldn't care which element it came from 
     // ensure click is between parent node (inclusive) and list (exclusive)
     if (this.parentNode.contains(e.target) && !this.contains(e.target)) {
       this.props.classList.toggle('hidden')
@@ -279,41 +309,34 @@ class MultiSelect extends Element {
     }
   }
 
-  position(node, options = { corner: this.props.corner }) {
+  position(node, corner='bottomleft') {
 
-    const mountPoint = node.getBoundingClientRect()
-    const me = this.getBoundingClientRect()
+    const parentCoords = node.getBoundingClientRect()
 
-    //this.style.top = '31px'
-    //this.style.left = 0
-    return
-
-    // todo: api for positioning a specific corner of multiselect to corner of mount point element
-    switch (options.corner) {
+    switch (corner) {
 
       case 'bottomleft':
-        this.style.top = `${mountPoint.bottom}px`
-        this.style.left = `${mountPoint.left}px` 
+        this.style.top  = `${parentCoords.bottom}px`
+        this.style.left = `${parentCoords.left}px` 
         return
       
       case 'bottomright':
-        this.style.top = `${mountPoint.bottom}px`
-        this.style.left = `${mountPoint.right - this.offsetWidth}px` 
+        this.style.top  = `${parentCoords.bottom}px`
+        this.style.left = `${parentCoords.right - this.offsetWidth}px` 
         return
       
       case 'topleft':
-        this.style.top = `${mountPoint.bottom}px`
-        this.style.left = `${mountPoint.left}px` 
+        this.style.top  = `${parentCoords.top}px`
+        this.style.left = `${parentCoords.left}px` 
         return
       
       case 'topright':
-        this.style.top = `${mountPoint.top}px`
-        this.style.left = `${mountPoint.right - this.offsetWidth}px` 
+        this.style.top  = `${parentCoords.top}px`
+        this.style.left = `${parentCoords.right - this.offsetWidth}px` 
         return
     }
 
   }
   
 }
-
 //export default MultiSelect.defineElement('doc-multiselect')
