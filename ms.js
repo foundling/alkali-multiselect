@@ -111,8 +111,8 @@ class MultiSelect extends Element {
   // {} -> HTMLElement
   build(props) {
 
-    return new (Div('.doc-multiselect-container', [
-        new Div('.doc-multiselect-close.fa.fa-remove'),
+    return new Div('.doc-multiselect-container', [
+        Div('.doc-multiselect-close.fa.fa-remove'),
         Div('.doc-multiselect-search-container', [
           props.Input({
             onkeyup: (e) => {
@@ -120,10 +120,10 @@ class MultiSelect extends Element {
             }  
           })
         ]),
-        new Div('.doc-multiselect-selected-container', {
+        Div('.doc-multiselect-selected-container', {
           onclick: this.removeItem.bind(this),
         }, [...props.items.map((item, index) => 
-          new Button('.doc-multiselect-list-item.selected', {
+          Button('.doc-multiselect-list-item.selected', {
             id: `doc-multiselect-selected-list-item-${index}`,
             classes: {
               selected: props.indexedSelections.to(selectedMap => Boolean(selectedMap[index]))
@@ -138,11 +138,10 @@ class MultiSelect extends Element {
             })
           ])
         )]),
-        // why doesn't a .map work here?
-        new Div('.doc-multiselect-unselected-container', { 
+        Div('.doc-multiselect-unselected-container', { 
           onclick: this.selectItem.bind(this)
         },  [...props.items.to(items => items.map((itemText, index) => 
-          new props.Item({
+          props.Item({
             id: `doc-multiselect-unselected-list-item-${index}`,
             title: 'select a list item',
             classes: {
@@ -157,14 +156,14 @@ class MultiSelect extends Element {
             Span('.list-item-text', 
             itemText) 
           ])).concat(
-              new Div('.doc-multiselect-list-item.no-matches-found', {
+              Div('.doc-multiselect-list-item.no-matches-found', {
                 classes: { hidden: this.props.hasMatches }
               }, [ Span('No Results Found!') ])
             )
           )]
         )
       ]
-    ))
+    )
 
   }
  
