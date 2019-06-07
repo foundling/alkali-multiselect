@@ -11,6 +11,7 @@ const books = [
 
 MultiSelect.defineElement('doc-multiselect')
 
-document.querySelector('.no-parent').appendChild(new MultiSelect({ items: books }))
+const ms1 = new MultiSelect({ items: books })
+document.querySelector('.no-parent').appendChild(ms1)
 
 new MultiSelect({ parentNode: document.querySelector('.with-parent > .multiselect-parent') })

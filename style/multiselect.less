@@ -9,6 +9,10 @@ doc-multiselect {
   width: 400px;
   padding: 1px;
 
+
+  &.hidden {
+    display: none;
+  }
   * { 
     box-sizing: border-box; 
   }
@@ -169,7 +173,7 @@ doc-multiselect {
         border-bottom: 1px solid #EFEFEF;
 
         &:focus {
-          background: lightgray;
+          //background: lightgray;
           outline: 0;
         }
 
@@ -184,6 +188,7 @@ doc-multiselect {
 
         &.selected {
           background: #eff7ff;
+          //border-style: inset;
         }
         &.no-matches-found {
           font-size: 12px;

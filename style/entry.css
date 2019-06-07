@@ -9,6 +9,9 @@ doc-multiselect {
   width: 400px;
   padding: 1px;
 }
+doc-multiselect.hidden {
+  display: none;
+}
 doc-multiselect * {
   box-sizing: border-box;
 }
@@ -141,7 +144,6 @@ doc-multiselect .doc-multiselect-container .doc-multiselect-unselected-container
   border-bottom: 1px solid #EFEFEF;
 }
 doc-multiselect .doc-multiselect-container .doc-multiselect-unselected-container .doc-multiselect-list-item:focus {
-  background: lightgray;
   outline: 0;
 }
 doc-multiselect .doc-multiselect-container .doc-multiselect-unselected-container .doc-multiselect-list-item:hover {

@@ -41,7 +41,7 @@ class MultiSelect extends Element {
       parentNode = null, 
       open = true, 
       corner = 'topright', 
-      closeOnSelect = true,
+      closeOnSelect = false,
       placeholder = '',
       maxSelections = null,
       ItemConstructor,
@@ -99,49 +99,20 @@ class MultiSelect extends Element {
 
   ready(props) {
 
-    /* SELECTION LIST */
-    const selectedList = props.items.to(items => items.map((item, index) => {
-      return new Button('.doc-multiselect-list-item.selected', {
-        id: `doc-multiselect-selected-list-item-${index}`,
-        classes: {
-          selected: props.indexedSelections.to(selectedMap => Boolean(selectedMap[index]))
-        }
-      }, [
-        Span('.list-item-text', item, {
-          title: 'selected list item',
-        }),
-        Button('.fa.fa-remove.remove-item', {
-          type: 'button',
-          title: 'remove list item'
-        })
-      ])
-    }))
+    const tree = this.build(props) 
 
-    /* UNSELECTED LIST AND NOT FOUND FALLBACK */
-    const unselectedList = props.items.to(items => items.map((itemText, index) => new props.Item({
-        id: `doc-multiselect-unselected-list-item-${index}`,
-        title: 'select a list item',
-        classes: {
-          filtered: this.searchFilter.to(searchFilter => {
-            if (searchFilter.length == 0)
-              return false
-            return !Boolean(itemText.toLowerCase().includes(searchFilter.toLowerCase()))
-          }),
-          selected: props.indexedSelections.to(selections => selections[index])
-        },
-      }, [ Span('.list-item-text', itemText) ])).concat(new NotFoundItem())
-    )
+    this.append(tree)
+    this.listContainer = this.querySelector('.doc-multiselect-unselected-container')
+    this.closeButton = this.querySelector('.doc-multiselect-close')
+    this.selectionsContainer = this.querySelector('.doc-multiselect-selected-container')
 
-    const NotFoundItem = Div('.doc-multiselect-list-item.no-matches-found', {
-      classes: { hidden: this.props.hasMatches }
-    }, [ Span('No Results Found!') ])
+  }
 
+  // {} -> HTMLElement
+  build(props) {
 
-    // can this be declared in a literal fashion to demonstrate the tree-like nature
-    // of the html?
-    this.append(new (Div('.doc-multiselect-container', {
-      children: [
-        Div('.doc-multiselect-close.fa.fa-remove'),
+    return new (Div('.doc-multiselect-container', [
+        new Div('.doc-multiselect-close.fa.fa-remove'),
         Div('.doc-multiselect-search-container', [
           props.Input({
             onkeyup: (e) => {
@@ -149,23 +120,51 @@ class MultiSelect extends Element {
             }  
           })
         ]),
-        Div('.doc-multiselect-selected-container', selectedList),
-        Div('.doc-multiselect-unselected-container', unselectedList),
+        new Div('.doc-multiselect-selected-container', {
+          onclick: this.removeItem.bind(this),
+        }, [...props.items.map((item, index) => 
+          new Button('.doc-multiselect-list-item.selected', {
+            id: `doc-multiselect-selected-list-item-${index}`,
+            classes: {
+              selected: props.indexedSelections.to(selectedMap => Boolean(selectedMap[index]))
+            }
+          }, [
+            Span('.list-item-text', item, {
+              title: 'selected list item',
+            }),
+            Button('.fa.fa-remove.remove-item', {
+              type: 'button',
+              title: 'remove list item'
+            })
+          ])
+        )]),
+        // why doesn't a .map work here?
+        new Div('.doc-multiselect-unselected-container', { 
+          onclick: this.selectItem.bind(this)
+        },  [...props.items.to(items => items.map((itemText, index) => 
+          new props.Item({
+            id: `doc-multiselect-unselected-list-item-${index}`,
+            title: 'select a list item',
+            classes: {
+              filtered: props.searchFilter.to(searchFilter => {
+                if (searchFilter.length == 0)
+                  return false
+                return !Boolean(itemText.toLowerCase().includes(searchFilter.toLowerCase()))
+              }),
+              selected: props.indexedSelections.to(selections => selections[index])
+            },
+          }, [ 
+            Span('.list-item-text', 
+            itemText) 
+          ])).concat(
+              new Div('.doc-multiselect-list-item.no-matches-found', {
+                classes: { hidden: this.props.hasMatches }
+              }, [ Span('No Results Found!') ])
+            )
+          )]
+        )
       ]
-    })))
-
-    const [dropdownContainer, _] = [...this.children]
-    const [
-      closeButton, 
-      searchContainer, 
-      selectionsContainer, 
-      listContainer
-    ] = [...dropdownContainer.children]
-    this.closeButton = closeButton
-    this.dropdownContainer = dropdownContainer
-    this.searchContainer = searchContainer
-    this.selectionsContainer = selectionsContainer 
-    this.listContainer = listContainer
+    ))
 
   }
  
@@ -246,10 +245,10 @@ class MultiSelect extends Element {
   }
 
   bindEvents() {
-    this.listContainer.addEventListener('click', this.selectItem.bind(this))
-    this.selectionsContainer.addEventListener('click', this.removeItem.bind(this))
+    //this.listContainer.addEventListener('click', this.selectItem.bind(this))
+    //this.selectionsContainer.addEventListener('click', this.removeItem.bind(this))
     document.body.addEventListener('click', this.handleOutsideClicks.bind(this))
-    this.closeButton.addEventListener('click', _ => this.props.classList.toggle('hidden'))
+    //this.closeButton.addEventListener('click', _ => this.props.classList.toggle('hidden'))
   }
 
   handleOutsideClicks(e) {
