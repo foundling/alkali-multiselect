@@ -1,15 +1,14 @@
 // todo: 
 // - style guide
-// - positioning api
 // - express structure in idiomatic alkali declarative form, makes much clearer
-// - positioning
+// x positioning api
 // - make 'arbitrarily' nestable and selectable
 // - when are event bindings supposed to be done?
 // - emit events
 //
 //
 // bugs:
-// - clicking on selected list element (light blue) in list of possible selections removes it but shouldnt'
+// x clicking on selected list element (light blue) in list of possible selections removes it but shouldnt'
 
 
 
